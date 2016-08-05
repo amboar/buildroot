@@ -1,0 +1,74 @@
+From c058f63fa859e51b09e90f0fe3262b51274c0442 Mon Sep 17 00:00:00 2001
+From: Andrew Jeffery <andrew@aj.id.au>
+Date: Mon, 6 Jun 2016 10:17:49 +0930
+Subject: [PATCH] HACK: flex: Dump metadata to stderr during parsing
+
+Signed-off-by: Andrew Jeffery <andrew@aj.id.au>
+---
+ gr-pager/lib/flex_parse_impl.cc | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/gr-pager/lib/flex_parse_impl.cc b/gr-pager/lib/flex_parse_impl.cc
+index 80123da22933..1e8dea94044a 100644
+--- a/gr-pager/lib/flex_parse_impl.cc
++++ b/gr-pager/lib/flex_parse_impl.cc
+@@ -90,6 +90,8 @@ namespace gr {
+         d_capcode = aw1+((aw2^0x001FFFFF)<<15)+0x1F9000;  // Don't ask
+       else
+         d_capcode = aw1-0x8000;
++
++      fprintf(stderr, "capcode: %d\n", d_capcode);
+     }
+ 
+     void
+@@ -102,12 +104,26 @@ namespace gr {
+       if(biw == 0 || biw == 0x001FFFFF)
+ 	return;
+ 
++      fprintf(stderr, "###############\n");
++      for (int j = 0; j < d_count / 8; j += 8) {
++	fprintf(stderr, "%08x %08x %08x %08x %08x %08x %08x %08x\n",
++	    d_datawords[j + 0],
++	    d_datawords[j + 1],
++	    d_datawords[j + 2],
++	    d_datawords[j + 3],
++	    d_datawords[j + 4],
++	    d_datawords[j + 5],
++	    d_datawords[j + 6],
++	    d_datawords[j + 7]);
++      }
++      fprintf(stderr, "\n");
++
+       // Vector start index is bits 15-10
+       // Address start address is bits 9-8, plus one for offset
+       int voffset = (biw >> 10) & 0x3f;
+       int aoffset = ((biw >> 8) & 0x03) + 1;
+ 
+-      //printf("BIW:%08X AW:%02i-%02i\n", biw, aoffset, voffset);
++      fprintf(stderr, "BIW:%08X AW:%02i-%02i\n", biw, aoffset, voffset);
+ 
+       // Iterate through pages and dispatch to appropriate handler
+       for(int i = aoffset; i < voffset; i++) {
+@@ -134,6 +150,8 @@ namespace gr {
+ 	  len &= 0x07;
+         int mw2 = mw1+len;
+ 
++	fprintf(stderr, "\tmw1: %d, mw2: %d (len: %d)\n", mw1, mw2, len);
++
+ 	if(mw1 == 0 && mw2 == 0)
+ 	  continue;				// Invalid VIW
+ 
+@@ -160,8 +178,10 @@ namespace gr {
+ 	  parse_unknown(mw1, mw2);
+ 
+ 	message::sptr msg = message::make_from_string(std::string(d_payload.str()));
++	fprintf(stderr, "\t%s\n\n", d_payload.str().c_str());
+ 	d_queue->handle(msg);
+       }
++      fprintf(stderr, "***************\n");
+     }
+ 
+     void
+-- 
+2.9.2.597.g66765a4
+
