@@ -1,0 +1,35 @@
+From 5b241b56ad1d276456348d4240d1a973a009c873 Mon Sep 17 00:00:00 2001
+From: Andrew Jeffery <andrew@aj.id.au>
+Date: Sat, 6 Aug 2016 20:34:15 +0930
+Subject: [PATCH] WIP: flex_parse_impl: Print partial contents of split
+ messages
+
+Signed-off-by: Andrew Jeffery <andrew@aj.id.au>
+---
+ gr-pager/lib/flex_parse_impl.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/gr-pager/lib/flex_parse_impl.cc b/gr-pager/lib/flex_parse_impl.cc
+index 1e8dea94044a..ff9c079086d2 100644
+--- a/gr-pager/lib/flex_parse_impl.cc
++++ b/gr-pager/lib/flex_parse_impl.cc
+@@ -158,8 +158,16 @@ namespace gr {
+ 	if(is_tone_page(d_type))
+ 	  mw1 = mw2 = 0;
+ 
++#if 0
+ 	if(mw1 > 87 || mw2 > 87)
+ 	  continue;				// Invalid offsets
++#endif
++	if (mw1 >= 88 || mw2 > 88)
++	  continue;
++
++	/* clamp instead of discard */
++	if (mw2 > 87)
++	  mw2 = 87;
+ 
+ 	d_payload.str("");
+ 	d_payload.setf(std::ios::showpoint);
+-- 
+2.9.2.597.g66765a4
+
